@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spawn Test - Zelda Adventure</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #000;
+            color: #0f0;
+            font-family: monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        #gameCanvas {
+            border: 2px solid #0f0;
+            background: #0a0a0a;
+        }
+        
+        #info {
+            margin-top: 20px;
+            padding: 10px;
+            background: #111;
+            border: 1px solid #0f0;
+            max-width: 800px;
+            width: 100%;
+        }
+        
+        button {
+            background: #0f0;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            font-family: monospace;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        
+        button:hover {
+            background: #0d0;
+        }
+        
+        .stat {
+            margin: 5px 0;
+        }
+        
+        .warning {
+            color: #f00;
+            font-weight: bold;
+        }
+        
+        .success {
+            color: #0f0;
+        }
+        
+        .controls {
+            margin: 10px 0;
+            padding: 10px;
+            background: #222;
+            border: 1px solid #0f0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🗡️ Spawn Testing Tool</h1>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    
+    <div>
+        <button onclick="testSpawn()">Generate New Level</button>
+        <button onclick="testLevel++; testSpawn()">Next Level ({{ testLevel }})</button>
+        <button onclick="testLevel = Math.max(1, testLevel - 1); testSpawn()">Prev Level</button>
+        <button onclick="toggleDebug()">Toggle Debug View</button>
+        <button onclick="autoTest()">Auto Test (10 Levels)</button>
+    </div>
+    
+    <div class="controls">
+        <strong>Current Level:</strong> <span id="currentLevel">1</span> | 
+        <strong>Debug Mode:</strong> <span id="debugStatus">ON</span>
+    </div>
+    
+    <div id="info">
+        <h3>Spawn Test Results:</h3>
+        <div id="stats"></div>
+        <div id="details"></div>
+    </div>
+
+    <script type="module">
+        import { LevelGenerator } from './LevelGenerator.js';
+
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        let levelGenerator = new LevelGenerator();
+        let testLevel = 1;
+        let walls = [];
+        let collectibles = [];
+        let enemies = [];
+        let debugMode = true;
+
+        window.testLevel = testLevel;
+        
+        window.testSpawn = function() {
+            // Clear
+            collectibles = [];
+            enemies = [];
+            
+            // Update UI
+            document.getElementById('currentLevel').textContent = testLevel;
+            
+            // Generate walls
+            walls = levelGenerator.generateWalls(testLevel);
+            
+            const avoidPositions = [
+                { x: 60, y: 60 }, // Player spawn
+                { x: 720, y: 520 } // Door position
+            ];
+            
+            // Generate enemies
+            const enemyCount = 2 + testLevel;
+            for (let i = 0; i < enemyCount; i++) {
+                const pos = levelGenerator.getRandomSafePosition(walls, avoidPositions, 40, 28);
+                enemies.push({ x: pos.x, y: pos.y, width: 28, height: 28, type: 'enemy', id: i });
+                avoidPositions.push(pos);
+            }
+            
+            // Generate collectibles
+            const rupeeCount = 3 + Math.floor(testLevel / 2);
+            const keyCount = 1 + Math.floor(testLevel / 3);
+            
+            for (let i = 0; i < rupeeCount; i++) {
+                const pos = levelGenerator.getRandomSafePosition(walls, avoidPositions, 30, 20);
+                collectibles.push({ x: pos.x, y: pos.y, width: 20, height: 20, type: 'rupee', id: i });
+                avoidPositions.push(pos);
+            }
+            
+            for (let i = 0; i < keyCount; i++) {
+                const pos = levelGenerator.getRandomSafePosition(walls, avoidPositions, 30, 20);
+                collectibles.push({ x: pos.x, y: pos.y, width: 20, height: 20, type: 'key', id: i });
+                avoidPositions.push(pos);
+            }
+            
+            // Check for collisions
+            checkSpawns();
+            draw();
+        };
+        
+        window.toggleDebug = function() {
+            debugMode = !debugMode;
+            document.getElementById('debugStatus').textContent = debugMode ? 'ON' : 'OFF';
+            draw();
+        };
+        
+        window.autoTest = function() {
+            let results = [];
+            for (let level = 1; level <= 10; level++) {
+                testLevel = level;
+                testSpawn();
+                const issues = countIssues();
+                results.push({ level, issues });
+            }
+            
+            console.log('Auto Test Results:', results);
+            const totalIssues = results.reduce((sum, r) => sum + r.issues, 0);
+            
+            let summary = `\n=== AUTO TEST SUMMARY ===\n`;
+            summary += `Tested 10 levels\n`;
+            summary += `Total issues found: ${totalIssues}\n`;
+            results.forEach(r => {
+                summary += `Level ${r.level}: ${r.issues} issues\n`;
+            });
+            console.log(summary);
+            
+            if (totalIssues === 0) {
+                alert('✅ All 10 levels passed! No collision issues found.');
+            } else {
+                alert(`⚠️ Found ${totalIssues} collision issues across 10 levels. Check console for details.`);
+            }
+        };
+        
+        function countIssues() {
+            let issues = 0;
+            
+            // Check collectibles
+            for (let item of collectibles) {
+                for (let wall of walls) {
+                    if (isColliding(item, wall)) {
+                        issues++;
+                    }
+                }
+            }
+            
+            // Check enemies
+            for (let enemy of enemies) {
+                for (let wall of walls) {
+                    if (isColliding(enemy, wall)) {
+                        issues++;
+                    }
+                }
+            }
+            
+            return issues;
+        }
+        
+        function isColliding(entity, wall) {
+            // Check AABB collision
+            if (entity.x < wall.x + wall.width &&
+                entity.x + entity.width > wall.x &&
+                entity.y < wall.y + wall.height &&
+                entity.y + entity.height > wall.y) {
+                return true;
+            }
+            
+            // Check all corners
+            const corners = [
+                { x: entity.x, y: entity.y },
+                { x: entity.x + entity.width, y: entity.y },
+                { x: entity.x, y: entity.y + entity.height },
+                { x: entity.x + entity.width, y: entity.y + entity.height }
+            ];
+            
+            for (let corner of corners) {
+                if (corner.x >= wall.x && corner.x <= wall.x + wall.width &&
+                    corner.y >= wall.y && corner.y <= wall.y + wall.height) {
+                    return true;
+                }
+            }
+            
+            return false;
+        }
+        
+        function checkSpawns() {
+            let stats = '';
+            let issues = 0;
+            let details = '';
+            
+            // Check collectibles
+            for (let item of collectibles) {
+                for (let wall of walls) {
+                    if (isColliding(item, wall)) {
+                        details += `<div class="warning">⚠️ ${item.type} #${item.id} INSIDE WALL at (${Math.round(item.x)}, ${Math.round(item.y)})</div>`;
+                        issues++;
+                    }
+                }
+            }
+            
+            // Check enemies
+            for (let enemy of enemies) {
+                for (let wall of walls) {
+                    if (isColliding(enemy, wall)) {
+                        details += `<div class="warning">⚠️ Enemy #${enemy.id} INSIDE WALL at (${Math.round(enemy.x)}, ${Math.round(enemy.y)})</div>`;
+                        issues++;
+                    }
+                }
+            }
+            
+            if (issues === 0) {
+                stats = `<div class="success stat">✅ All ${collectibles.length} collectibles spawned correctly</div>`;
+                stats += `<div class="success stat">✅ All ${enemies.length} enemies spawned correctly</div>`;
+                stats += `<div class="success stat">✅ No collision issues detected!</div>`;
+                stats += `<div class="success stat">✅ Level ${testLevel} PASSED</div>`;
+            } else {
+                stats = `<div class="warning stat">❌ Found ${issues} collision issues on Level ${testLevel}</div>`;
+                stats += `<div class="warning stat">❌ LEVEL ${testLevel} FAILED</div>`;
+            }
+            
+            document.getElementById('stats').innerHTML = stats;
+            document.getElementById('details').innerHTML = details;
+        }
+        
+        function draw() {
+            // Clear
+            ctx.fillStyle = '#0a0a0a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw floor
+            const tileSize = 40;
+            ctx.fillStyle = '#1a1a1a';
+            for (let x = 0; x < canvas.width; x += tileSize) {
+                for (let y = 0; y < canvas.height; y += tileSize) {
+                    if ((x / tileSize + y / tileSize) % 2 === 0) {
+                        ctx.fillRect(x, y, tileSize, tileSize);
+                    }
+                }
+            }
+            
+            // Draw walls
+            ctx.fillStyle = '#3a3a3a';
+            for (let wall of walls) {
+                ctx.fillRect(wall.x, wall.y, wall.width, wall.height);
+                ctx.strokeStyle = '#000';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(wall.x, wall.y, wall.width, wall.height);
+            }
+            
+            // Draw collectibles
+            for (let item of collectibles) {
+                // Check if this item is colliding
+                let hasCollision = false;
+                for (let wall of walls) {
+                    if (isColliding(item, wall)) {
+                        hasCollision = true;
+                        break;
+                    }
+                }
+                
+                // Color based on collision status
+                if (hasCollision) {
+                    ctx.fillStyle = '#ff0000'; // RED if colliding
+                } else if (item.type === 'rupee') {
+                    ctx.fillStyle = '#00ff00'; // GREEN for rupees
+                } else {
+                    ctx.fillStyle = '#ffd700'; // GOLD for keys
+                }
+                
+                ctx.fillRect(item.x, item.y, item.width, item.height);
+                
+                if (debugMode) {
+                    // Draw collision box
+                    ctx.strokeStyle = hasCollision ? '#f00' : '#0ff';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(item.x, item.y, item.width, item.height);
+                    
+                    // Draw safe zone
+                    ctx.strokeStyle = '#ff0';
+                    ctx.setLineDash([2, 2]);
+                    ctx.strokeRect(item.x - 30, item.y - 30, item.width + 60, item.height + 60);
+                    ctx.setLineDash([]);
+                    
+                    // Draw ID
+                    ctx.fillStyle = '#fff';
+                    ctx.font = '10px monospace';
+                    ctx.fillText(item.id, item.x + 5, item.y + 15);
+                }
+            }
+            
+            // Draw enemies
+            for (let enemy of enemies) {
+                // Check if this enemy is colliding
+                let hasCollision = false;
+                for (let wall of walls) {
+                    if (isColliding(enemy, wall)) {
+                        hasCollision = true;
+                        break;
+                    }
+                }
+                
+                ctx.fillStyle = hasCollision ? '#ff0000' : '#ff8800';
+                ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
+                
+                if (debugMode) {
+                    ctx.strokeStyle = hasCollision ? '#f00' : '#f80';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(enemy.x, enemy.y, enemy.width, enemy.height);
+                    
+                    ctx.strokeStyle = '#ff0';
+                    ctx.setLineDash([2, 2]);
+                    ctx.strokeRect(enemy.x - 40, enemy.y - 40, enemy.width + 80, enemy.height + 80);
+                    ctx.setLineDash([]);
+                    
+                    // Draw ID
+                    ctx.fillStyle = '#fff';
+                    ctx.font = '10px monospace';
+                    ctx.fillText(enemy.id, enemy.x + 10, enemy.y + 18);
+                }
+            }
+            
+            // Draw player spawn
+            ctx.fillStyle = '#00f';
+            ctx.fillRect(60, 60, 32, 32);
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(60, 60, 32, 32);
+            
+            if (debugMode) {
+                ctx.fillStyle = '#fff';
+                ctx.font = '10px monospace';
+                ctx.fillText('P', 72, 80);
+            }
+            
+            // Draw door
+            ctx.fillStyle = '#f0f';
+            ctx.fillRect(720, 520, 40, 40);
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(720, 520, 40, 40);
+            
+            if (debugMode) {
+                ctx.fillStyle = '#fff';
+                ctx.font = '10px monospace';
+                ctx.fillText('D', 735, 545);
+            }
+        }
+        
+        // Initial test
+        testSpawn();
+    </script>
+</body>
+</html>

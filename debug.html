@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Simple Test - No Modules</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #1a1a2e;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: monospace;
+            color: white;
+        }
+        canvas {
+            border: 3px solid #00ffff;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+        }
+        .container {
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 Simple Game Test (No Modules)</h1>
+        <p>Arrow keys to move, Space to attack</p>
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <div id="info" style="margin-top: 10px; font-size: 18px;"></div>
+    </div>
+
+    <script>
+        console.log('Simple test starting...');
+        
+        // Get canvas
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const info = document.getElementById('info');
+        
+        // Simple player
+        const player = {
+            x: 100,
+            y: 100,
+            width: 32,
+            height: 32,
+            speed: 4,
+            color: '#00ff00'
+        };
+        
+        // Simple enemy
+        const enemy = {
+            x: 400,
+            y: 300,
+            width: 28,
+            height: 28,
+            speed: 1.5,
+            color: '#ff0000',
+            dx: 1,
+            dy: 1
+        };
+        
+        // Input
+        const keys = {};
+        window.addEventListener('keydown', e => {
+            keys[e.key] = true;
+            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
+                e.preventDefault();
+            }
+        });
+        window.addEventListener('keyup', e => keys[e.key] = false);
+        
+        // Game loop
+        function update() {
+            // Move player
+            if (keys['ArrowUp']) player.y -= player.speed;
+            if (keys['ArrowDown']) player.y += player.speed;
+            if (keys['ArrowLeft']) player.x -= player.speed;
+            if (keys['ArrowRight']) player.x += player.speed;
+            
+            // Keep player in bounds
+            player.x = Math.max(30, Math.min(player.x, 770 - player.width));
+            player.y = Math.max(30, Math.min(player.y, 570 - player.height));
+            
+            // Move enemy
+            enemy.x += enemy.dx * enemy.speed;
+            enemy.y += enemy.dy * enemy.speed;
+            
+            // Bounce enemy off walls
+            if (enemy.x < 30 || enemy.x > 770 - enemy.width) enemy.dx *= -1;
+            if (enemy.y < 30 || enemy.y > 570 - enemy.height) enemy.dy *= -1;
+            
+            // Update info
+            info.textContent = `Player: (${Math.floor(player.x)}, ${Math.floor(player.y)}) | Enemy: (${Math.floor(enemy.x)}, ${Math.floor(enemy.y)})`;
+        }
+        
+        function draw() {
+            // Clear background
+            ctx.fillStyle = '#0a0a0a';
+            ctx.fillRect(0, 0, 800, 600);
+            
+            // Draw floor tiles
+            ctx.fillStyle = '#1a1a1a';
+            for (let x = 0; x < 800; x += 40) {
+                for (let y = 0; y < 600; y += 40) {
+                    if ((x / 40 + y / 40) % 2 === 0) {
+                        ctx.fillRect(x, y, 40, 40);
+                    }
+                }
+            }
+            
+            // Draw borders
+            ctx.fillStyle = '#2a2a2a';
+            ctx.fillRect(0, 0, 800, 30); // top
+            ctx.fillRect(0, 570, 800, 30); // bottom
+            ctx.fillRect(0, 0, 30, 600); // left
+            ctx.fillRect(770, 0, 30, 600); // right
+            
+            // Draw player
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(player.x + 10, player.y + 10, 4, 4);
+            ctx.fillRect(player.x + 18, player.y + 10, 4, 4);
+            
+            // Draw enemy
+            ctx.fillStyle = enemy.color;
+            ctx.fillRect(enemy.x, enemy.y, enemy.width, enemy.height);
+            
+            // Draw text
+            ctx.fillStyle = '#00ffff';
+            ctx.font = '20px monospace';
+            ctx.fillText('SIMPLE TEST MODE', 250, 30);
+        }
+        
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+        
+        console.log('Starting simple game loop...');
+        gameLoop();
+        console.log('Game loop started!');
+    </script>
+</body>
+</html>

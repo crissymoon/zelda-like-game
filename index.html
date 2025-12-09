@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zelda Adventure - Level Quest</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <h1>⚔️ ZELDA ADVENTURE ⚔️</h1>
+        <div class="info">
+            <div class="stat-group">
+                <span class="stat-label">Level:</span>
+                <span id="level" class="stat-value">1</span>
+            </div>
+            <div class="stat-group">
+                <span class="stat-label">Score:</span>
+                <span id="score" class="stat-value">0</span>
+            </div>
+            <div class="stat-group">
+                <span class="stat-label">Hearts:</span>
+                <span id="hearts" class="stat-value">❤️❤️❤️</span>
+            </div>
+            <div class="stat-group">
+                <span class="stat-label">Items:</span>
+                <span id="items" class="stat-value">0/0</span>
+            </div>
+        </div>
+        <div class="controls-info">
+            <span>Arrow Keys: Move</span>
+            <span>Space: Attack</span>
+            <span>ESC/P: Pause</span>
+            <span>Collect all items to unlock exit! 🚪</span>
+        </div>
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <div id="levelComplete" class="modal hidden">
+            <div class="modal-content">
+                <h2>🎉 LEVEL COMPLETE! 🎉</h2>
+                <p>Level <span id="completedLevel">1</span> cleared!</p>
+                <p>Score: <span id="levelScore">0</span></p>
+                <p>Time Bonus: <span id="timeBonus">0</span></p>
+                <button id="nextLevelBtn" class="game-btn">Next Level →</button>
+            </div>
+        </div>
+        <div id="gameOver" class="modal hidden">
+            <div class="modal-content game-over-modal">
+                <h2>💀 GAME OVER 💀</h2>
+                <p>You reached Level <span id="finalLevel">1</span></p>
+                <p>Final Score: <span id="finalScore">0</span></p>
+                <button onclick="location.reload()" class="game-btn">Try Again</button>
+            </div>
+        </div>
+        <div id="pauseMenu" class="modal hidden">
+            <div class="modal-content pause-modal">
+                <h2>⏸️ PAUSED ⏸️</h2>
+                <div class="pause-controls">
+                    <p><strong>Controls:</strong></p>
+                    <p>⬆️ ⬇️ ⬅️ ➡️ Arrow Keys - Move</p>
+                    <p>🗡️ Space - Attack</p>
+                    <p>⏸️ ESC or P - Pause/Resume</p>
+                </div>
+                <div class="pause-tips">
+                    <p><strong>Tips:</strong></p>
+                    <p>• Collect all items to unlock the exit</p>
+                    <p>• Avoid or defeat enemies</p>
+                    <p>• Complete levels quickly for time bonus</p>
+                </div>
+                <button onclick="window.game.togglePause()" class="game-btn">Resume</button>
+            </div>
+        </div>
+    </div>
+    <script type="module" src="game.js"></script>
+</body>
+</html>

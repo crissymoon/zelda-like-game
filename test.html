@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Module Test</title>
+</head>
+<body>
+    <h1>Check Console (F12)</h1>
+    <script type="module">
+        console.log('TEST: Script is loading...');
+        
+        import { CONFIG } from './config.js';
+        console.log('TEST: CONFIG loaded:', CONFIG);
+        
+        import { Player } from './Player.js';
+        console.log('TEST: Player loaded');
+        
+        import { Enemy } from './Enemy.js';
+        console.log('TEST: Enemy loaded');
+        
+        import { Collectible } from './Collectible.js';
+        console.log('TEST: Collectible loaded');
+        
+        import { Door } from './Door.js';
+        console.log('TEST: Door loaded');
+        
+        import { LevelGenerator } from './LevelGenerator.js';
+        console.log('TEST: LevelGenerator loaded');
+        
+        console.log('TEST: All modules loaded successfully!');
+        
+        // Try to get canvas
+        const canvas = document.getElementById('testCanvas');
+        if (canvas) {
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = 'red';
+            ctx.fillRect(0, 0, 100, 100);
+            console.log('TEST: Canvas working!');
+        }
+    </script>
+    <canvas id="testCanvas" width="400" height="300" style="border: 1px solid black;"></canvas>
+</body>
+</html>

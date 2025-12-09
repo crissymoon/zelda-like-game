@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnose Index.html Issue</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #000;
+            color: #0f0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .check { color: #0f0; }
+        .fail { color: #f00; }
+        .info { color: #ff0; }
+        pre { background: #111; padding: 10px; border: 1px solid #0f0; overflow-x: auto; }
+        button {
+            background: #0f0;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            font-family: monospace;
+            font-weight: bold;
+        }
+        button:hover { background: #0c0; }
+        #output { margin-top: 20px; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #333; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Diagnosing index.html Issue</h1>
+    
+    <div class="section">
+        <h2>Test Sequence</h2>
+        <button onclick="runFullDiagnostic()">Run Full Diagnostic</button>
+        <button onclick="testDOMElements()">1. Test DOM Elements</button>
+        <button onclick="testModuleImports()">2. Test Module Imports</button>
+        <button onclick="testGameCreation()">3. Test Game Creation</button>
+        <button onclick="location.href='index.html'">Open index.html</button>
+    </div>
+
+    <div id="output"></div>
+
+    <script type="module">
+        const output = document.getElementById('output');
+        
+        function log(msg, type = 'info') {
+            const div = document.createElement('div');
+            div.className = type;
+            div.innerHTML = msg;
+            output.appendChild(div);
+        }
+        
+        function clear() {
+            output.innerHTML = '';
+        }
+
+        window.testDOMElements = function() {
+            clear();
+            log('<h3>Testing DOM Elements from index.html...</h3>');
+            
+            // Load index.html content to check elements
+            fetch('index.html')
+                .then(r => r.text())
+                .then(html => {
+                    const checks = [
+                        { id: 'gameCanvas', name: 'Canvas' },
+                        { id: 'level', name: 'Level display' },
+                        { id: 'score', name: 'Score display' },
+                        { id: 'hearts', name: 'Hearts display' },
+                        { id: 'items', name: 'Items display' },
+                        { id: 'levelComplete', name: 'Level complete modal' },
+                        { id: 'gameOver', name: 'Game over modal' },
+                        { id: 'nextLevelBtn', name: 'Next level button' },
+                        { id: 'completedLevel', name: 'Completed level span' },
+                        { id: 'levelScore', name: 'Level score span' },
+                        { id: 'timeBonus', name: 'Time bonus span' },
+                        { id: 'finalLevel', name: 'Final level span' },
+                        { id: 'finalScore', name: 'Final score span' }
+                    ];
+                    
+                    checks.forEach(check => {
+                        const found = html.includes(`id="${check.id}"`);
+                        if (found) {
+                            log(`✓ ${check.name} (${check.id}) found`, 'check');
+                        } else {
+                            log(`✗ ${check.name} (${check.id}) MISSING!`, 'fail');
+                        }
+                    });
+                    
+                    // Check for module script tag
+                    if (html.includes('type="module"')) {
+                        log('✓ Script has type="module"', 'check');
+                    } else {
+                        log('✗ Script missing type="module"!', 'fail');
+                    }
+                    
+                    if (html.includes('src="game.js"')) {
+                        log('✓ Script loads game.js', 'check');
+                    } else {
+                        log('✗ Script not loading game.js!', 'fail');
+                    }
+                })
+                .catch(e => log('Error loading index.html: ' + e, 'fail'));
+        };
+
+        window.testModuleImports = async function() {
+            clear();
+            log('<h3>Testing Module Imports...</h3>');
+            
+            const modules = [
+                { path: './config.js', name: 'CONFIG' },
+                { path: './Player.js', name: 'Player' },
+                { path: './Enemy.js', name: 'Enemy' },
+                { path: './Collectible.js', name: 'Collectible' },
+                { path: './Door.js', name: 'Door' },
+                { path: './LevelGenerator.js', name: 'LevelGenerator' }
+            ];
+            
+            for (const mod of modules) {
+                try {
+                    const imported = await import(mod.path);
+                    if (imported) {
+                        log(`✓ ${mod.name} loaded successfully`, 'check');
+                        log(`   Exports: ${Object.keys(imported).join(', ')}`, 'info');
+                    }
+                } catch (e) {
+                    log(`✗ ${mod.name} failed: ${e.message}`, 'fail');
+                }
+            }
+        };
+
+        window.testGameCreation = async function() {
+            clear();
+            log('<h3>Testing Game Creation...</h3>');
+            
+            try {
+                log('Importing game.js module...', 'info');
+                
+                // Create a test canvas
+                const testCanvas = document.createElement('canvas');
+                testCanvas.id = 'gameCanvas';
+                testCanvas.width = 800;
+                testCanvas.height = 600;
+                document.body.appendChild(testCanvas);
+                log('✓ Test canvas created', 'check');
+                
+                // Create test UI elements
+                const testElements = [
+                    'level', 'score', 'hearts', 'items',
+                    'levelComplete', 'gameOver', 'nextLevelBtn',
+                    'completedLevel', 'levelScore', 'timeBonus',
+                    'finalLevel', 'finalScore'
+                ];
+                
+                testElements.forEach(id => {
+                    if (!document.getElementById(id)) {
+                        const el = document.createElement('div');
+                        el.id = id;
+                        document.body.appendChild(el);
+                    }
+                });
+                log('✓ Test UI elements created', 'check');
+                
+                // Now try to import and create game
+                log('Attempting to import game module...', 'info');
+                const gameModule = await import('./game.js');
+                log('✓ game.js module loaded!', 'check');
+                log('Module exports: ' + Object.keys(gameModule).join(', '), 'info');
+                
+                // Check if game instance was auto-created
+                if (window.game) {
+                    log('✓ Game instance found on window.game', 'check');
+                    log('Game state:', 'info');
+                    log(`   Level: ${window.game.level}`, 'info');
+                    log(`   Hearts: ${window.game.hearts}`, 'info');
+                    log(`   Walls: ${window.game.walls ? window.game.walls.length : 'undefined'}`, 'info');
+                    log(`   Enemies: ${window.game.enemies ? window.game.enemies.length : 'undefined'}`, 'info');
+                    log(`   Collectibles: ${window.game.collectibles ? window.game.collectibles.length : 'undefined'}`, 'info');
+                } else {
+                    log('⚠ No game instance found (might be timing issue)', 'info');
+                }
+                
+                // Clean up
+                testCanvas.remove();
+                testElements.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el && !el.hasAttribute('data-keep')) el.remove();
+                });
+                
+            } catch (e) {
+                log('✗ Error: ' + e.message, 'fail');
+                log('Stack: ' + e.stack, 'fail');
+            }
+        };
+
+        window.runFullDiagnostic = async function() {
+            clear();
+            log('<h2>🔍 Full Diagnostic Report</h2>');
+            log('<h3>Step 1: DOM Elements</h3>');
+            await new Promise(resolve => {
+                testDOMElements();
+                setTimeout(resolve, 1000);
+            });
+            
+            log('<h3>Step 2: Module Imports</h3>');
+            await testModuleImports();
+            
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            log('<h3>Step 3: Game Creation</h3>');
+            await testGameCreation();
+            
+            log('<h2>✓ Diagnostic Complete</h2>');
+            log('<p>If all checks passed but index.html still doesn\'t work, the issue is likely timing-related.</p>');
+            log('<p><strong>Try opening index.html now and check the browser console.</strong></p>');
+        };
+
+        log('Diagnostic tool ready. Click "Run Full Diagnostic" to begin.', 'info');
+    </script>
+</body>
+</html>

@@ -1,0 +1,223 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Courier New', monospace;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+    color: #fff;
+}
+
+.game-container {
+    background: #0f0f1e;
+    padding: 25px;
+    box-shadow: 0 0 50px rgba(0, 255, 255, 0.3), 
+                0 0 100px rgba(0, 255, 255, 0.1);
+    text-align: center;
+    border: 3px solid #00ffff;
+}
+
+h1 {
+    color: #00ffff;
+    margin-bottom: 15px;
+    font-size: 2.5em;
+    text-shadow: 0 0 10px #00ffff, 0 0 20px #00ffff;
+    letter-spacing: 3px;
+    font-weight: bold;
+}
+
+.info {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 10px;
+    background: #1a1a2e;
+    padding: 12px;
+    border: 2px solid #00ffff;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.stat-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 100px;
+}
+
+.stat-label {
+    font-size: 11px;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 3px;
+}
+
+.stat-value {
+    font-size: 18px;
+    font-weight: bold;
+    color: #00ffff;
+    text-shadow: 0 0 5px #00ffff;
+}
+
+.controls-info {
+    margin-bottom: 15px;
+    color: #aaa;
+    font-size: 13px;
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    gap: 15px;
+    padding: 8px;
+    background: #1a1a2e;
+    border: 1px solid #444;
+}
+
+#gameCanvas {
+    border: 4px solid #00ffff;
+    background: #0a0a0a;
+    display: block;
+    margin: 0 auto;
+    box-shadow: 0 0 30px rgba(0, 255, 255, 0.5),
+                inset 0 0 30px rgba(0, 0, 0, 0.8);
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+}
+
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.95);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    padding: 50px;
+    text-align: center;
+    border: 4px solid #00ffff;
+    box-shadow: 0 0 50px rgba(0, 255, 255, 0.5);
+    min-width: 400px;
+}
+
+.modal-content h2 {
+    font-size: 3em;
+    margin-bottom: 25px;
+    color: #00ffff;
+    text-shadow: 0 0 20px #00ffff;
+    animation: pulse 2s infinite;
+}
+
+.game-over-modal h2 {
+    color: #ff4444;
+    text-shadow: 0 0 20px #ff4444;
+}
+
+.pause-modal h2 {
+    color: #ffaa00;
+    text-shadow: 0 0 20px #ffaa00;
+}
+
+.pause-controls, .pause-tips {
+    background: #0f0f1e;
+    border: 2px solid #444;
+    padding: 20px;
+    margin: 20px 0;
+    border-radius: 5px;
+}
+
+.pause-controls p, .pause-tips p {
+    font-size: 1.1em;
+    margin: 10px 0;
+    color: #ccc;
+}
+
+.pause-controls p:first-child,
+.pause-tips p:first-child {
+    color: #00ffff;
+    font-size: 1.3em;
+    margin-bottom: 15px;
+}
+
+.modal-content p {
+    font-size: 1.3em;
+    margin: 15px 0;
+    color: #fff;
+}
+
+.modal-content span {
+    color: #00ffff;
+    font-weight: bold;
+    text-shadow: 0 0 10px #00ffff;
+}
+
+.game-btn {
+    padding: 15px 40px;
+    font-size: 1.3em;
+    background: linear-gradient(135deg, #00ffff 0%, #0099cc 100%);
+    color: #000;
+    border: 3px solid #00ffff;
+    cursor: pointer;
+    font-family: 'Courier New', monospace;
+    font-weight: bold;
+    margin-top: 20px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    transition: all 0.3s;
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+}
+
+.game-btn:hover {
+    background: linear-gradient(135deg, #00ffff 0%, #00ccff 100%);
+    transform: scale(1.05);
+    box-shadow: 0 0 30px rgba(0, 255, 255, 0.8);
+}
+
+.game-btn:active {
+    transform: scale(0.98);
+}
+
+.hidden {
+    display: none !important;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 0.8;
+    }
+}
+
+@media (max-width: 900px) {
+    #gameCanvas {
+        width: 100%;
+        height: auto;
+    }
+    
+    .modal-content {
+        min-width: auto;
+        width: 90%;
+        padding: 30px;
+    }
+    
+    h1 {
+        font-size: 1.8em;
+    }
+}
